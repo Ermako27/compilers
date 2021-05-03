@@ -1,4 +1,31 @@
-from utils import multiPriority, expandWithPlus, isSymbol
+from treeUtils import multiPriority, expandWithPlus, isSymbol
+
+class Node:
+    def __init__(self, symbol):
+        self.number = 0
+        self.symbol = symbol
+        self.parent = None
+        self.left = None
+        self.right = None
+        self.firstPos = {}
+        self.lastPos = {}
+        self.nullable = False
+
+class Tree:
+    def __init__(self):
+        self.root = None
+        # self.nodeStack = []
+        # self.nums = 0
+        # ноды в порядке следовая по Node.number
+        self.numed = []
+        self.followPos = {}
+
+
+
+
+
+def checkPriority(op1, op2):
+    return multiPriority(op1, op2)
 
 def createPolishNotation(regExp):
     exp = expandWithPlus(regExp)
@@ -38,5 +65,53 @@ def createPolishNotation(regExp):
 
     return result
 
-def checkPriority(op1, op2):
-    return multiPriority(op1, op2)
+def createTree(regExp):
+    stack = []
+    nodeNum = 1
+    tree = Tree()
+
+    exp = createPolishNotation(regExp)
+    for i in range(len(exp)):
+        if isSymbol(exp[i]):
+            symbolNode = Node(exp[i])
+            symbolNode.number = nodeNum
+            nodeNum += 1
+            stack.append(symbolNode)
+            tree.numed.append(symbolNode)
+        elif exp[i] == '*':
+            # создаем ноду операции
+            operationNode = Node(exp[i])
+
+            # достаем из стека ноду сверху и связываем их
+            childNode = stack.pop()
+            operationNode.left = childNode
+            childNode.parent = operationNode
+
+            # добавляем новую ноду из двух связанных в стек
+            stack.append(operationNode)
+        else: # сюда попадают любые другие операции
+            # создаем ноду операции
+            operationNode = Node(exp[i])
+
+            rightChildNode = stack.pop()
+            leftChildNode = stack.pop()
+    
+            operationNode.right = rightChildNode
+            operationNode.left = leftChildNode
+
+            rightChildNode.parent = operationNode
+            leftChildNode.parent = operationNode
+
+            # добавляем новую ноду из трех связанных в стек
+            stack.append(operationNode)
+        
+    print(stack)
+
+    root = stack.pop()
+    tree.root = root
+    return tree
+
+
+
+
+
