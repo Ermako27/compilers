@@ -1,5 +1,6 @@
 from treeUtils import multiPriority, expandWithPlus, isSymbol
 
+
 class Node:
     def __init__(self, symbol):
         self.number = 0
@@ -7,9 +8,11 @@ class Node:
         self.parent = None
         self.left = None
         self.right = None
-        self.firstPos = {}
-        self.lastPos = {}
+        self.firstPos = set()
+        self.lastPos = set()
         self.nullable = False
+
+        self.nodeId = 0
 
 class Tree:
     def __init__(self):
@@ -21,6 +24,59 @@ class Tree:
         self.followPos = {}
 
 
+def setFirstLastPos(node):
+    if isSymbol(node.symbol):
+        node.firstPos.add(node.number)
+        node.lastPos.add(node.number)
+
+    elif node.symbol == '+':
+        # firstPos
+        leftNullable = node.left.nullable
+        if leftNullable:
+            node.firstPos = node.left.firstPos.union(node.right.firstPos)
+        else:
+            node.firstPos = node.left.firstPos
+        
+        # lastPos
+        rightNullable = node.right.nullable
+        if rightNullable:
+            node.lastPos = node.left.lastPos.union(node.right.lastPos)
+        else:
+            node.lastPos = node.right.lastPos
+
+    elif node.symbol == '|':
+        # firstPos
+        node.firstPos = node.left.firstPos.union(node.right.firstPos)
+
+        # lastPos
+        node.lastPos = node.left.lastPos.union(node.right.lastPos)
+    
+    elif node.symbol == '*':
+        node.firstPos = node.left.firstPos
+        node.lastPos = node.left.lastPos
+
+
+def setNullable(node):
+    if isSymbol(node.symbol):
+        node.nullable = False
+
+    if node.symbol == '*':
+        node.nullable = True
+
+    elif node.symbol == '+':
+        rightNullable = node.right.nullable
+        leftNullable = node.left.nullable
+
+        node.nullable = rightNullable and leftNullable
+
+    elif node.symbol == '|':
+        rightNullable = node.right.nullable
+        leftNullable = node.left.nullable
+
+        node.nullable = rightNullable or leftNullable
+
+def getFollowPos(node):
+    pass
 
 
 
@@ -30,7 +86,6 @@ def checkPriority(op1, op2):
 def createPolishNotation(regExp):
     exp = expandWithPlus(regExp)
     exp += '+#'
-    print('expanded:', exp)
     result = ''
     stack = []
     for i in range(len(exp)):
@@ -66,18 +121,33 @@ def createPolishNotation(regExp):
     return result
 
 def createTree(regExp):
+    # <graphviz>
+    nodeId = 0 # индекс ноды для graphviz - нужен только для корректной отрисовки дерева
+    # </graphviz>
+
     stack = []
     nodeNum = 1
     tree = Tree()
 
     exp = createPolishNotation(regExp)
+
     for i in range(len(exp)):
         if isSymbol(exp[i]):
             symbolNode = Node(exp[i])
             symbolNode.number = nodeNum
             nodeNum += 1
+
+            setNullable(symbolNode)
+            setFirstLastPos(symbolNode)
+
+            # <graphviz>
+            symbolNode.nodeId = symbolNode.symbol + '_' + str(nodeId)
+            nodeId += 1
+            # </graphviz>
+
             stack.append(symbolNode)
             tree.numed.append(symbolNode)
+
         elif exp[i] == '*':
             # создаем ноду операции
             operationNode = Node(exp[i])
@@ -86,6 +156,14 @@ def createTree(regExp):
             childNode = stack.pop()
             operationNode.left = childNode
             childNode.parent = operationNode
+
+            setNullable(operationNode)
+            setFirstLastPos(operationNode)
+
+            # <graphviz>
+            operationNode.nodeId = operationNode.symbol + '_' + str(nodeId)
+            nodeId += 1
+            # </graphviz>
 
             # добавляем новую ноду из двух связанных в стек
             stack.append(operationNode)
@@ -102,10 +180,16 @@ def createTree(regExp):
             rightChildNode.parent = operationNode
             leftChildNode.parent = operationNode
 
+            setNullable(operationNode)
+            setFirstLastPos(operationNode)
+
+            # <graphviz>
+            operationNode.nodeId = operationNode.symbol + '_' + str(nodeId)
+            nodeId += 1
+            # </graphviz>
+
             # добавляем новую ноду из трех связанных в стек
             stack.append(operationNode)
-        
-    print(stack)
 
     root = stack.pop()
     tree.root = root
