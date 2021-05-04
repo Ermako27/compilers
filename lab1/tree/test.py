@@ -4,21 +4,23 @@ from dfa import createDfa
 
 regExps = ['(a|b)*abb', 'a*b*(aa*|b)']
 
-ast = Digraph('AST', filename='ast.gv');
+astGraph = Digraph('AST', filename='astGraph.gv');
+dfaGraph = Digraph('DFA', filename='dfaGraph.gv');
+dfaGraph.attr(rankdir='LR', size='8,5')
 
-def createGraphEdges(root):
+def createTreeEdges(root):
     print(root.nodeId,' firstPos:',root.firstPos)
     print(root.nodeId,' lastPos:',root.lastPos)
     print(root.nodeId,' nullable:',root.nullable)
     print('-------------------------------------')
 
     if root.left != None:
-        ast.edge(root.nodeId, root.left.nodeId)
-        createGraphEdges(root.left)
+        astGraph.edge(root.nodeId, root.left.nodeId)
+        createTreeEdges(root.left)
 
     if root.right != None:
-        ast.edge(root.nodeId, root.right.nodeId)
-        createGraphEdges(root.right)
+        astGraph.edge(root.nodeId, root.right.nodeId)
+        createTreeEdges(root.right)
 
 def printFollowPos(tree):
     print('\n\n\nFollowPos:')
@@ -39,11 +41,27 @@ def printDfaStates(dfa):
     for state in dfa.states:
         print(state.positions)
 
-tree = createTree(regExps[1])
-createGraphEdges(tree.root)
+def createDfaEdges(dfa):
+    dfaGraph.attr('node', shape='doublecircle')
+    for state in dfa.states:
+        if state.isFinalState:
+            dfaGraph.node(', '.join([str(pos) for pos in state.positions]))
+
+    dfaGraph.attr('node', shape='circle')
+    for state in dfa.states: 
+        edge1 = ', '.join([str(pos) for pos in state.positions])
+        for symbol, nextState in state.moves.items():
+            edge2 = ', '.join([str(pos) for pos in nextState.positions])
+            dfaGraph.edge(edge1, edge2, label=symbol) 
+
+
+tree = createTree(regExps[0])
+createTreeEdges(tree.root)
 printFollowPos(tree)
 printNumed(tree)
-ast.render()
+astGraph.render()
 
-dfa = createDfa(regExps[1])
+dfa = createDfa(regExps[0])
+createDfaEdges(dfa)
 printDfaStates(dfa)
+dfaGraph.render()

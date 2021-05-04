@@ -3,7 +3,6 @@ from tree import createTree
 class State():
     def __init__(self):
         self.positions = set()
-        # self.stateId = "".join([str(pos) for pos in positions])
         self.moves = {} # словарь вида {'a': [State, State]}
         self.isStartState = False
         self.isFinalState = False
