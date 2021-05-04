@@ -20,7 +20,7 @@ class Tree:
         # self.nodeStack = []
         # self.nums = 0
         # ноды в порядке следовая по Node.number
-        self.numed = []
+        self.numed = {}
         self.followPos = {}
 
 
@@ -157,7 +157,7 @@ def createTree(regExp):
             # </graphviz>
 
             stack.append(symbolNode)
-            tree.numed.append(symbolNode)
+            tree.numed[nodeNum] = symbolNode.symbol
             tree.followPos[str(nodeNum)] = set()
 
             nodeNum += 1
