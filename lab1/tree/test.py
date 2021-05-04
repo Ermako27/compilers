@@ -23,8 +23,8 @@ def printFollowPos(tree):
     followPosLen = len(tree.followPos)
     print('\n\n\nFollowPos:')
     print('----------------------')
-    for i in range(followPosLen):
-        print('{0} : {1}'.format(i, tree.followPos[i]))
+    for key in tree.followPos.keys():
+        print('{0} : {1}'.format(key, tree.followPos[key]))
 
 tree = createTree(regExps[1])
 createGraphEdges(tree.root)
