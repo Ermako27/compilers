@@ -21,7 +21,7 @@ class Tree:
         # self.nums = 0
         # ноды в порядке следовая по Node.number
         self.numed = []
-        self.followPos = {}
+        self.followPos = []
 
 
 def setFirstLastPos(node):
@@ -75,8 +75,25 @@ def setNullable(node):
 
         node.nullable = rightNullable or leftNullable
 
-def getFollowPos(node):
-    pass
+def setFollowPos(node, tree):
+    if (node.symbol == '*'):
+        for pos in node.left.lastPos:
+            # print(tree.followPos[pos], node.left.firstPos)
+            tree.followPos[pos] = tree.followPos[pos].union(node.left.firstPos)
+
+        
+        if node.left != None:
+            setFollowPos(node.left, tree)
+
+    elif (node.symbol == '+'):
+        for pos in node.left.lastPos:
+            tree.followPos[pos] = tree.followPos[pos].union(node.right.firstPos)
+        
+        if node.left != None:
+            setFollowPos(node.left, tree)
+
+        if node.right != None:
+            setFollowPos(node.right, tree)
 
 
 
@@ -147,6 +164,7 @@ def createTree(regExp):
 
             stack.append(symbolNode)
             tree.numed.append(symbolNode)
+            tree.followPos.append(set())
 
         elif exp[i] == '*':
             # создаем ноду операции
@@ -193,6 +211,7 @@ def createTree(regExp):
 
     root = stack.pop()
     tree.root = root
+    setFollowPos(tree.root, tree)
     return tree
 
 

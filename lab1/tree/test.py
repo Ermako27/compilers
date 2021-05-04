@@ -19,6 +19,14 @@ def createGraphEdges(root):
         ast.edge(root.nodeId, root.right.nodeId)
         createGraphEdges(root.right)
 
+def printFollowPos(tree):
+    followPosLen = len(tree.followPos)
+    print('\n\n\nFollowPos:')
+    print('----------------------')
+    for i in range(followPosLen):
+        print('{0} : {1}'.format(i, tree.followPos[i]))
+
 tree = createTree(regExps[1])
 createGraphEdges(tree.root)
+printFollowPos(tree)
 ast.render()
