@@ -10,8 +10,9 @@ class State():
         self.isVisited = False
 
 class Dfa():
-    def __init__(self):
+    def __init__(self, alphabet):
         self.states = []
+        self.alphabet = alphabet
 
     def getFirstUnvisitedState(self):
         for state in self.states:
@@ -40,9 +41,9 @@ class Dfa():
 
 
 def createDfa(regExp):
-    dfa = Dfa()
-
     tree = createTree(regExp)
+    dfa = Dfa(tree.alphabet)
+    
     firstPos = tree.root.firstPos
 
     startState = State()
@@ -87,19 +88,24 @@ def createTestDfa():
     # создаем состаяния
     state1 = State() # A
     state1.positions = set([1])
+    state1.stateId = '1'
     state1.isStartState = True
 
     state2 = State() # B
     state2.positions = set([2])
+    state2.stateId = '2'
 
     state3 = State() # C
     state3.positions = set([3])
+    state3.stateId = '3'
 
     state4 = State() # D
     state4.positions = set([4])
+    state4.stateId = '4'
 
     state5 = State() # E
     state5.positions = set([5])
+    state5.stateId = '5'
     state5.isFinalState = True
 
     # выставляем переходы
@@ -128,66 +134,116 @@ def createTestDfa():
         'b': state3
     }
 
-    dfa = Dfa()
+    dfa = Dfa(set(['a', 'b']))
     dfa.states = [state1, state2, state3, state4, state5]
 
     return dfa
 
+def isStateInClass(eqvClass, stateToFind):
+    for state in eqvClass:
+        if state.stateId == stateToFind.stateId:
+            return True
+    return False
 
-def minimizeDfa():
-    dfa = createTestDfa()
+def splitClass(eqvClass, classSymbolPair):
+    newClass1 = None
+    newClass2 = None
 
+    spliterClass = classSymbolPair[0]
+    symbol = classSymbolPair[1]
+
+    for state in eqvClass:
+        if state.moves[symbol] and isStateInClass(spliterClass, state.moves[symbol]):
+            if newClass1 == None:
+                newClass1 = set()
+            newClass1.add(state)
+        else:
+            if newClass2 == None:
+                newClass2 = set()
+            newClass2.add(state)
+
+    return newClass1, newClass2
+
+def minimizeDfa(dfa):
     # создали классы 0-эквивалентности
     nonFinalStates = set()
     finalStates = set()
     for state in dfa.states:
         if state.isFinalState:
-            finaleStates.add(state)
+            finalStates.add(state)
         else:
-            nonFinaleStates.add(state)
+            nonFinalStates.add(state)
 
-    # список всех классов разбиения, изпользуем словарь, чтобы можно было легко попнуть по id
-    # здесь id - конкатенация stateId всех состояний в классе
+    # классы разбиения, изпользуем словарь, чтобы можно было легко попнуть по id
     equivalenceClasses = {
-        ''.join([state.stateId for state in nonFinalStates]): nonFinalStates
-        ''.join([state.stateId for state in finalStates]): finalStates
+        '1': nonFinalStates,
+        '2': finalStates
     }
+    # используем далее эту переменную в качестве id для новых классов
+    lastClassId = len(equivalenceClasses)
+
     stateQueue = []
 
     # заполняем очередь состояний
-    for state in nonFinalStates:
-        stateQueue.append(state)
-    for state in finalStates:
-        stateQueue.append(state)
-    
-    while len(stateQueue) != 0:
-        state = stateQueue.pop(0)
+    for symbol in dfa.alphabet:
+        stateQueue.append(tuple([nonFinalStates, symbol])) # пара <C, a> , где С - класс состояний, a - символ по которому делается переход (ребро)
+        stateQueue.append(tuple([finalStates, symbol]))
 
+    while len(stateQueue) != 0:
+        classSymbolPair = stateQueue.pop(0)
+
+        tmpEquivalenceClasses = equivalenceClasses.copy()
         for eqvClassId, eqvClass in equivalenceClasses.items():
             # должно возвращать два set(), например eqvClass = {A,B,C,D}; newClass1 = {A,B,C}, newClass2 = {D}
             # где каждая A,B,C,D есть state
-            newClass1, newClass2 = splitClass(eqvClass, state)
+            newClass1, newClass2 = splitClass(eqvClass, classSymbolPair)
 
-            if (newClass1 != None and newClass2 != None):
-                equivalenceClasses.pop(eqvClassId)
+            if newClass1 != None and newClass2 != None:
+                tmpEquivalenceClasses.pop(eqvClassId)
 
-                newClass1Id = ''.join([state.stateId for state in newClass1])
-                equivalenceClasses[newClass1Id] = newClass1
+                lastClassId += 1
+                tmpEquivalenceClasses[str(lastClassId)] = newClass1
+                lastClassId += 1
+                tmpEquivalenceClasses[str(lastClassId)] = newClass2
 
-                newClass2Id = ''.join([state.stateId for state in newClass2])
-                equivalenceClasses[newClass2Id] = newClass2
-
-                # добавляем в очередь состояний, состояния из новых классов
-                for state in newClass1:
-                    stateQueue.append(state)
-
-                for state in newClass2:
-                    stateQueue.append(state)
+                for symbol in dfa.alphabet:
+                    stateQueue.append(tuple([newClass1, symbol]))
+                    stateQueue.append(tuple([newClass2, symbol]))
+        equivalenceClasses = tmpEquivalenceClasses.copy()
 
     return equivalenceClasses
 
 
+#----------------------------------------------
 
+    # # заполняем очередь состояний
+    # for state in nonFinalStates:
+    #     stateQueue.append(state)
+    # for state in finalStates:
+    #     stateQueue.append(state)
+    
+    # while len(stateQueue) != 0:
+    #     state = stateQueue.pop(0)
 
-def splitClass(eqvClass, state):
-    pass
+    #     for eqvClassId, eqvClass in equivalenceClasses.items():
+    #         # должно возвращать два set(), например eqvClass = {A,B,C,D}; newClass1 = {A,B,C}, newClass2 = {D}
+    #         # где каждая A,B,C,D есть state
+    #         newClass1, newClass2 = splitClass(eqvClass, state)
+
+    #         if (newClass1 != None and newClass2 != None):
+    #             equivalenceClasses.pop(eqvClassId)
+
+                # newClass1Id = ''.join([state.stateId for state in newClass1])
+                # equivalenceClasses[newClass1Id] = newClass1
+
+                # newClass2Id = ''.join([state.stateId for state in newClass2])
+                # equivalenceClasses[newClass2Id] = newClass2
+
+    #             # добавляем в очередь состояний, состояния из новых классов
+    #             for state in newClass1:
+    #                 stateQueue.append(state)
+
+    #             for state in newClass2:
+    #                 stateQueue.append(state)
+
+    # return equivalenceClasses

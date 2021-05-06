@@ -1,6 +1,6 @@
 from graphviz import Digraph
 from tree import createPolishNotation, createTree
-from dfa import createDfa, createTestDfa
+from dfa import createDfa, createTestDfa, minimizeDfa
 
 regExps = ['(a|b)*abb', 'a*b*(aa*|b)']
 
@@ -62,6 +62,16 @@ def renderDfa(dfa, filename):
 
     dfaGraph.render()
 
+def printMinimizedClasses(classes):
+    print('\n\n\nMinimazed states')
+    print('----------------------')
+    num = 1
+    for eqvClassId, eqvClass in classes.items():
+        print('class {0}'.format(num))
+        for state in eqvClass:
+            print('    state: ', state.positions)
+        num += 1
+
 
 ########## TREE TEST ##########
 tree = createTree(regExps[0])
@@ -77,3 +87,5 @@ renderDfa(dfa1, 'dfaGraph')
 dfa2 = createTestDfa()
 printDfaStates(dfa2)
 renderDfa(dfa2, 'testDfa')
+minimizedClasses = minimizeDfa(dfa2)
+printMinimizedClasses(minimizedClasses)

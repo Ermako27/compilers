@@ -22,6 +22,7 @@ class Tree:
         # ноды в порядке следовая по Node.number
         self.numed = {}
         self.followPos = {}
+        self.alphabet = set()
 
 
 def setFirstLastPos(node):
@@ -161,6 +162,8 @@ def createTree(regExp):
             tree.followPos[str(nodeNum)] = set()
 
             nodeNum += 1
+            if (exp[i] != '#'):
+                tree.alphabet.add(exp[i])
 
         elif exp[i] == '*':
             # создаем ноду операции
