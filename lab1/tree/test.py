@@ -1,26 +1,28 @@
 from graphviz import Digraph
 from tree import createPolishNotation, createTree
-from dfa import createDfa
+from dfa import createDfa, createTestDfa
 
 regExps = ['(a|b)*abb', 'a*b*(aa*|b)']
 
-astGraph = Digraph('AST', filename='astGraph.gv');
-dfaGraph = Digraph('DFA', filename='dfaGraph.gv');
-dfaGraph.attr(rankdir='LR', size='8,5')
+def createTreeEdges(root, graph):
+    if root.left != None:
+        graph.edge(root.nodeId, root.left.nodeId)
+        createTreeEdges(root.left, graph)
 
-def createTreeEdges(root):
+    if root.right != None:
+        graph.edge(root.nodeId, root.right.nodeId)
+        createTreeEdges(root.right, graph)
+
+def renderTree(root):
+    astGraph = Digraph('AST', filename='astGraph.gv')
     print(root.nodeId,' firstPos:',root.firstPos)
     print(root.nodeId,' lastPos:',root.lastPos)
     print(root.nodeId,' nullable:',root.nullable)
     print('-------------------------------------')
 
-    if root.left != None:
-        astGraph.edge(root.nodeId, root.left.nodeId)
-        createTreeEdges(root.left)
+    createTreeEdges(root, astGraph)
 
-    if root.right != None:
-        astGraph.edge(root.nodeId, root.right.nodeId)
-        createTreeEdges(root.right)
+    astGraph.render()
 
 def printFollowPos(tree):
     print('\n\n\nFollowPos:')
@@ -41,8 +43,12 @@ def printDfaStates(dfa):
     for state in dfa.states:
         print(state.positions)
 
-def createDfaEdges(dfa):
+def renderDfa(dfa, filename):
+    file = '{0}.gv'.format(filename)
+    dfaGraph = Digraph('DFA', filename=file)
+    dfaGraph.attr(rankdir='LR', size='8,5')
     dfaGraph.attr('node', shape='doublecircle')
+
     for state in dfa.states:
         if state.isFinalState:
             dfaGraph.node(', '.join([str(pos) for pos in state.positions]))
@@ -52,16 +58,22 @@ def createDfaEdges(dfa):
         edge1 = ', '.join([str(pos) for pos in state.positions])
         for symbol, nextState in state.moves.items():
             edge2 = ', '.join([str(pos) for pos in nextState.positions])
-            dfaGraph.edge(edge1, edge2, label=symbol) 
+            dfaGraph.edge(edge1, edge2, label=symbol)
+
+    dfaGraph.render()
 
 
+########## TREE TEST ##########
 tree = createTree(regExps[0])
-createTreeEdges(tree.root)
 printFollowPos(tree)
 printNumed(tree)
-astGraph.render()
+renderTree(tree.root)
 
-dfa = createDfa(regExps[0])
-createDfaEdges(dfa)
-printDfaStates(dfa)
-dfaGraph.render()
+########## DFA TEST ##########
+dfa1 = createDfa(regExps[0])
+printDfaStates(dfa1)
+renderDfa(dfa1, 'dfaGraph')
+
+dfa2 = createTestDfa()
+printDfaStates(dfa2)
+renderDfa(dfa2, 'testDfa')
