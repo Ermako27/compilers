@@ -15,10 +15,6 @@ def createTreeEdges(root, graph):
 
 def renderTree(root):
     astGraph = Digraph('AST', filename='astGraph.gv')
-    print(root.nodeId,' firstPos:',root.firstPos)
-    print(root.nodeId,' lastPos:',root.lastPos)
-    print(root.nodeId,' nullable:',root.nullable)
-    print('-------------------------------------')
 
     createTreeEdges(root, astGraph)
 
@@ -41,14 +37,13 @@ def printDfaStates(dfa):
     print('\n\n\nDfa states:')
     print('----------------------')
     for state in dfa.states:
-        print(state.positions)
+        print(state.positions, ' | ', state.stateId)
 
 def renderDfa(dfa, filename):
     file = '{0}.gv'.format(filename)
     dfaGraph = Digraph('DFA', filename=file)
     dfaGraph.attr(rankdir='LR', size='8,5')
     dfaGraph.attr('node', shape='doublecircle')
-
     for state in dfa.states:
         if state.isFinalState:
             dfaGraph.node(', '.join([str(pos) for pos in state.positions]))
@@ -56,6 +51,9 @@ def renderDfa(dfa, filename):
     dfaGraph.attr('node', shape='circle')
     for state in dfa.states: 
         edge1 = ', '.join([str(pos) for pos in state.positions])
+        if state.isStartState:
+            dfaGraph.node('s', shape='point')
+            dfaGraph.edge('s', edge1)
         for symbol, nextState in state.moves.items():
             edge2 = ', '.join([str(pos) for pos in nextState.positions])
             dfaGraph.edge(edge1, edge2, label=symbol)
@@ -74,18 +72,19 @@ def printMinimizedClasses(classes):
 
 
 ########## TREE TEST ##########
-tree = createTree(regExps[0])
+tree = createTree(regExps[1])
 printFollowPos(tree)
 printNumed(tree)
 renderTree(tree.root)
 
 ########## DFA TEST ##########
-dfa1 = createDfa(regExps[0])
+dfa1 = createDfa(regExps[1])
 printDfaStates(dfa1)
 renderDfa(dfa1, 'dfaGraph')
 
 dfa2 = createTestDfa()
 printDfaStates(dfa2)
 renderDfa(dfa2, 'testDfa')
-minimizedClasses = minimizeDfa(dfa2)
+minimizedClasses,  minimizeDfa2 = minimizeDfa(dfa2)
 printMinimizedClasses(minimizedClasses)
+renderDfa(minimizeDfa2, 'minimizedTestDfa')

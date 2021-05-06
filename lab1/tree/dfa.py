@@ -72,7 +72,6 @@ def createDfa(regExp):
 
         # решаем что делать с переходами во временной мапе
         for moveSymbol, state in tmpMoves.items():
-            state.stateId = ''.join([str(pos) for pos in state.positions])
             if dfa.isAlreadyHave(state): # если такое состояние у нас уже есть
                 alreadyHaveState = dfa.getStateByPositions(state.positions) # то берем состоние, которое у нас уже есть
                 currentState.moves[moveSymbol] = alreadyHaveState # и присваевам его в каче-ве перехода 
@@ -81,6 +80,9 @@ def createDfa(regExp):
                 dfa.states.append(state) # добавляем в список состояний автомата
 
         currentState.isVisited = True
+
+    for state in dfa.states:
+        state.stateId = ''.join([str(pos) for pos in state.positions])
     
     return dfa
 
@@ -211,7 +213,31 @@ def minimizeDfa(dfa):
                     stateQueue.append(tuple([newClass2, symbol]))
         equivalenceClasses = tmpEquivalenceClasses.copy()
 
-    return equivalenceClasses
+    # сливаем состояния в одно в классах эквиваленции
+    newStates = []
+
+    for eqvClassId, eqvClass in equivalenceClasses.items():
+        if (len(eqvClass) == 1):
+            state = eqvClass.pop()
+            newStates.append(state)
+        else:
+            newState = State()
+            for state in eqvClass:
+                newState.positions = newState.positions.union(state.positions)
+                for symbol, nextState in state.moves.items():
+                    if isStateInClass(eqvClass, nextState):
+                        newState.moves[symbol] = newState
+                    else:
+                        newState.moves[symbol] = nextState
+                newState.isStartState = newState.isStartState or state.isStartState
+                newState.isFinalState = newState.isFinalState or state.isFinalState
+            
+            newState.stateId = ''.join([str(pos) for pos in newState.positions])
+            newStates.append(newState)
+
+    dfa.states = newStates
+
+    return equivalenceClasses, dfa
 
 
 #----------------------------------------------
