@@ -274,6 +274,72 @@ def createTestDfa3():
 
     return dfa
 
+def createTestDfa4():
+    # создаем состаяния
+    dfa = Dfa(set(['a', 'b']))
+    state1 = State(dfa.alphabet) # A
+    state1.positions = set([1])
+    state1.stateId = '1'
+    state1.isStartState = True
+
+    state2 = State(dfa.alphabet) # B
+    state2.positions = set([2])
+    state2.stateId = '2'
+
+    state3 = State(dfa.alphabet) # C
+    state3.positions = set([3])
+    state3.stateId = '3'
+    state3.isFinalState = True
+
+    state4 = State(dfa.alphabet) # D
+    state4.positions = set([4])
+    state4.stateId = '4'
+
+    state5 = State(dfa.alphabet) # E
+    state5.positions = set([5])
+    state5.stateId = '5'
+    state5.isFinalState = True
+
+    state1.moves = { # A
+        'a': state2, # B
+        'b': state4 # D
+    }
+
+    state2.moves = { # B
+        'a': state2, # B
+        'b': state3 # C
+    }
+    state2.fromMoves['a'].append(state1)
+    state2.fromMoves['a'].append(state2)
+    state2.fromMoves['a'].append(state5)
+
+    state3.moves = { # C
+        'a': state4, # D
+        'b': state5 # E
+    }
+    state3.fromMoves['b'].append(state3)
+    state3.fromMoves['b'].append(state5)
+
+    state4.moves = { # D
+        'a': state4, # D
+        'b': state5 # E
+    }
+    state4.fromMoves['a'].append(state3)
+    state4.fromMoves['b'].append(state1)
+
+    state5.moves = { # E
+        'a': state2, # B
+        'b': state3 # C
+    }
+    state5.fromMoves['b'].append(state3)
+    state5.fromMoves['b'].append(state4)
+
+    # выставляем переходы
+
+    dfa.states = [state1, state2, state3, state4, state5]
+
+    return dfa
+
 ########## TREE TEST ##########
 tree = createTree(regExps[1])
 printFollowPos(tree)
@@ -308,3 +374,11 @@ renderDfa(testDfa3, 'testDfa3')
 minimizedClasses3,  minimizeTestDfa3 = minimizeDfa(testDfa3)
 printMinimizedClasses(minimizedClasses3)
 renderDfa(minimizeTestDfa3, 'minimizeTestDfa3')
+
+# 4
+testDfa4 = createTestDfa4()
+printDfaStates(testDfa4)
+renderDfa(testDfa4, 'testDfa4')
+minimizedClasses4,  minimizeTestDfa4 = minimizeDfa(testDfa4)
+printMinimizedClasses(minimizedClasses4)
+renderDfa(minimizeTestDfa4, 'minimizeTestDfa4')

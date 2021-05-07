@@ -189,8 +189,6 @@ def minimizeDfa(dfa):
                         newState.fromMoves[symbol].append(newState)
                     else:
                         newState.moves[symbol] = nextState # ставим новому состоянию переход в следующее
-                        # удаляем из fromMoves все состояния, которые присутствуют в текущем классе эквиваленции, они больше не нужны по отдельности, потому что были соединены в одно состояние
-                        nextState.fromMoves[symbol] = list(filter(lambda s: isStateInClass(eqvClass, s), nextState.fromMoves[symbol]))
                         # добавляем вместо них в fromMoves новое соединенное состояние
                         nextState.fromMoves[symbol].append(newState)
 
