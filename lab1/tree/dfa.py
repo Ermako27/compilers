@@ -1,9 +1,10 @@
 from tree import createTree
 
 class State():
-    def __init__(self):
+    def __init__(self, alphabet):
         self.positions = set()
-        self.moves = {} # словарь вида {'a': [State, State]}
+        self.moves = {} # словарь вида {'a': [State, State]}, куда мы можем перейти из этого состояния
+        self.fromMoves = {symbol:[] for symbol in alphabet} # словарь вида {'a': [State, State]}, откуда мы можем перейти в это состояние
         self.stateId = ''
         self.isStartState = False
         self.isFinalState = False
@@ -46,7 +47,7 @@ def createDfa(regExp):
     
     firstPos = tree.root.firstPos
 
-    startState = State()
+    startState = State(dfa.alphabet)
     startState.positions = firstPos
     startState.isStartState = True
 
@@ -63,7 +64,7 @@ def createDfa(regExp):
             symbol = tree.numed[pos] # смотрим какая буква соответствует позиции
             if symbol != '#':
                 if symbol not in tmpMoves: # если во временной мапе еще нет перехода по такой букве
-                    tmpMoves[symbol] = State() # то создаем переход в новое состояние
+                    tmpMoves[symbol] = State(dfa.alphabet) # то создаем переход в новое состояние
 
                 # тут по коду ясно
                 tmpMoves[symbol].positions = tmpMoves[symbol].positions.union(tree.followPos[str(pos)])
@@ -74,9 +75,14 @@ def createDfa(regExp):
         for moveSymbol, state in tmpMoves.items():
             if dfa.isAlreadyHave(state): # если такое состояние у нас уже есть
                 alreadyHaveState = dfa.getStateByPositions(state.positions) # то берем состоние, которое у нас уже есть
-                currentState.moves[moveSymbol] = alreadyHaveState # и присваевам его в каче-ве перехода 
+                currentState.moves[moveSymbol] = alreadyHaveState # и присваевам его в каче-ве перехода
+
+                alreadyHaveState.fromMoves[moveSymbol].append(currentState) # сохраняем ссылку на предыдущее состояние
             else:
                 currentState.moves[moveSymbol] = state # присваиваем свежесозданное состояние
+
+                state.fromMoves[moveSymbol].append(currentState) # сохраняем ссылку на предыдущее состояние
+
                 dfa.states.append(state) # добавляем в список состояний автомата
 
         currentState.isVisited = True
@@ -84,61 +90,6 @@ def createDfa(regExp):
     for state in dfa.states:
         state.stateId = ''.join([str(pos) for pos in state.positions])
     
-    return dfa
-
-def createTestDfa():
-    # создаем состаяния
-    state1 = State() # A
-    state1.positions = set([1])
-    state1.stateId = '1'
-    state1.isStartState = True
-
-    state2 = State() # B
-    state2.positions = set([2])
-    state2.stateId = '2'
-
-    state3 = State() # C
-    state3.positions = set([3])
-    state3.stateId = '3'
-
-    state4 = State() # D
-    state4.positions = set([4])
-    state4.stateId = '4'
-
-    state5 = State() # E
-    state5.positions = set([5])
-    state5.stateId = '5'
-    state5.isFinalState = True
-
-    # выставляем переходы
-    state1.moves = {
-        'a': state2,
-        'b': state3
-    }
-
-    state2.moves = {
-        'a': state2,
-        'b': state4
-    }
-
-    state3.moves = {
-        'a': state2,
-        'b': state3
-    }
-
-    state4.moves = {
-        'a': state2,
-        'b': state5
-    }
-
-    state5.moves = {
-        'a': state2,
-        'b': state3
-    }
-
-    dfa = Dfa(set(['a', 'b']))
-    dfa.states = [state1, state2, state3, state4, state5]
-
     return dfa
 
 def isStateInClass(eqvClass, stateToFind):
@@ -155,7 +106,7 @@ def splitClass(eqvClass, classSymbolPair):
     symbol = classSymbolPair[1]
 
     for state in eqvClass:
-        if state.moves[symbol] and isStateInClass(spliterClass, state.moves[symbol]):
+        if symbol in state.moves and isStateInClass(spliterClass, state.moves[symbol]):
             if newClass1 == None:
                 newClass1 = set()
             newClass1.add(state)
@@ -213,32 +164,54 @@ def minimizeDfa(dfa):
                     stateQueue.append(tuple([newClass2, symbol]))
         equivalenceClasses = tmpEquivalenceClasses.copy()
 
-    # сливаем состояния в одно в классах эквиваленции
+    # создаем список состояний составленных из эквивалентных
     newStates = []
-
     for eqvClassId, eqvClass in equivalenceClasses.items():
         if (len(eqvClass) == 1):
             state = eqvClass.pop()
             newStates.append(state)
         else:
-            newState = State()
+            newState = State(dfa.alphabet)
             for state in eqvClass:
                 newState.positions = newState.positions.union(state.positions)
-                for symbol, nextState in state.moves.items():
-                    if isStateInClass(eqvClass, nextState):
-                        newState.moves[symbol] = newState
-                    else:
-                        newState.moves[symbol] = nextState
                 newState.isStartState = newState.isStartState or state.isStartState
                 newState.isFinalState = newState.isFinalState or state.isFinalState
-            
             newState.stateId = ''.join([str(pos) for pos in newState.positions])
+
+            # для каждого состояния из класса эквиваленции
+            for state in eqvClass:
+                # данный цикл нужен чтобы соединить состояния, В которые раньше шли состояния из класса эквиваленции, с новым состоянием
+                # которое как раз и состоит из состояний из класса эквиваленции
+                for symbol, nextState in state.moves.items():
+                    # если следующее состояние есть в текущем классе эквиваленции
+                    if isStateInClass(eqvClass, nextState):
+                        newState.moves[symbol] = newState # значит делаем переход из нового состояния в себя же
+                        newState.fromMoves[symbol].append(newState)
+                    else:
+                        newState.moves[symbol] = nextState # ставим новому состоянию переход в следующее
+                        # удаляем из fromMoves все состояния, которые присутствуют в текущем классе эквиваленции, они больше не нужны по отдельности, потому что были соединены в одно состояние
+                        nextState.fromMoves[symbol] = list(filter(lambda s: isStateInClass(eqvClass, s), nextState.fromMoves[symbol]))
+                        # добавляем вместо них в fromMoves новое соединенное состояние
+                        nextState.fromMoves[symbol].append(newState)
+
+                # данный цикл нужен чтобы соединить состояния, которые раньше шли В состояния из класса эквиваленции, с новым состоянием
+                # которое как раз и состоит из состояний из класса эквиваленции
+                for symbol, prevStates in state.fromMoves.items():
+                    for prevState in prevStates:
+                        prevState.moves[symbol] = newState
+                        newState.fromMoves[symbol].append(prevState)
+
             newStates.append(newState)
 
     dfa.states = newStates
 
     return equivalenceClasses, dfa
 
+def isStateInClasses(eqvClasses, state):
+    for eqvClassId, eqvClass in eqvClasses.items():
+        if isStateInClass(eqvClass, state):
+            return True
+    return False
 
 #----------------------------------------------
 
