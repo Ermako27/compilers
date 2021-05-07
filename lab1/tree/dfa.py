@@ -98,6 +98,52 @@ def isStateInClass(eqvClass, stateToFind):
             return True
     return False
 
+def isStateInClasses(eqvClasses, state):
+    for eqvClassId, eqvClass in eqvClasses.items():
+        if isStateInClass(eqvClass, state):
+            return True
+    return False
+
+def createNewDfaStates(equivalenceClasses, dfa):
+    # создаем список состояний составленных из эквивалентных
+    newStates = []
+    for eqvClassId, eqvClass in equivalenceClasses.items():
+        if (len(eqvClass) == 1):
+            state = eqvClass.pop()
+            newStates.append(state)
+        else:
+            newState = State(dfa.alphabet)
+            for state in eqvClass:
+                newState.positions = newState.positions.union(state.positions)
+                newState.isStartState = newState.isStartState or state.isStartState
+                newState.isFinalState = newState.isFinalState or state.isFinalState
+            newState.stateId = ''.join([str(pos) for pos in newState.positions])
+
+            # для каждого состояния из класса эквиваленции
+            for state in eqvClass:
+                # данный цикл нужен чтобы соединить состояния, В которые раньше шли состояния из класса эквиваленции, с новым состоянием
+                # которое как раз и состоит из состояний из класса эквиваленции
+                for symbol, nextState in state.moves.items():
+                    # если следующее состояние есть в текущем классе эквиваленции
+                    if isStateInClass(eqvClass, nextState):
+                        newState.moves[symbol] = newState # значит делаем переход из нового состояния в себя же
+                        newState.fromMoves[symbol].append(newState)
+                    else:
+                        newState.moves[symbol] = nextState # ставим новому состоянию переход в следующее
+                        # добавляем вместо них в fromMoves новое соединенное состояние
+                        nextState.fromMoves[symbol].append(newState)
+
+                # данный цикл нужен чтобы соединить состояния, которые раньше шли В состояния из класса эквиваленции, с новым состоянием
+                # которое как раз и состоит из состояний из класса эквиваленции
+                for symbol, prevStates in state.fromMoves.items():
+                    for prevState in prevStates:
+                        prevState.moves[symbol] = newState
+                        newState.fromMoves[symbol].append(prevState)
+
+            newStates.append(newState)
+
+    return newStates
+
 def splitClass(eqvClass, classSymbolPair):
     newClass1 = None
     newClass2 = None
@@ -116,6 +162,11 @@ def splitClass(eqvClass, classSymbolPair):
             newClass2.add(state)
 
     return newClass1, newClass2
+
+def printClassStates(eqvClass, name =''):
+    print(name)
+    for state in eqvClass:
+        print(state.positions)
 
 def minimizeDfa(dfa):
     # создали классы 0-эквивалентности
@@ -164,52 +215,9 @@ def minimizeDfa(dfa):
                     stateQueue.append(tuple([newClass2, symbol]))
         equivalenceClasses = tmpEquivalenceClasses.copy()
 
-    # создаем список состояний составленных из эквивалентных
-    newStates = []
-    for eqvClassId, eqvClass in equivalenceClasses.items():
-        if (len(eqvClass) == 1):
-            state = eqvClass.pop()
-            newStates.append(state)
-        else:
-            newState = State(dfa.alphabet)
-            for state in eqvClass:
-                newState.positions = newState.positions.union(state.positions)
-                newState.isStartState = newState.isStartState or state.isStartState
-                newState.isFinalState = newState.isFinalState or state.isFinalState
-            newState.stateId = ''.join([str(pos) for pos in newState.positions])
-
-            # для каждого состояния из класса эквиваленции
-            for state in eqvClass:
-                # данный цикл нужен чтобы соединить состояния, В которые раньше шли состояния из класса эквиваленции, с новым состоянием
-                # которое как раз и состоит из состояний из класса эквиваленции
-                for symbol, nextState in state.moves.items():
-                    # если следующее состояние есть в текущем классе эквиваленции
-                    if isStateInClass(eqvClass, nextState):
-                        newState.moves[symbol] = newState # значит делаем переход из нового состояния в себя же
-                        newState.fromMoves[symbol].append(newState)
-                    else:
-                        newState.moves[symbol] = nextState # ставим новому состоянию переход в следующее
-                        # добавляем вместо них в fromMoves новое соединенное состояние
-                        nextState.fromMoves[symbol].append(newState)
-
-                # данный цикл нужен чтобы соединить состояния, которые раньше шли В состояния из класса эквиваленции, с новым состоянием
-                # которое как раз и состоит из состояний из класса эквиваленции
-                for symbol, prevStates in state.fromMoves.items():
-                    for prevState in prevStates:
-                        prevState.moves[symbol] = newState
-                        newState.fromMoves[symbol].append(prevState)
-
-            newStates.append(newState)
-
-    dfa.states = newStates
+    dfa.states = createNewDfaStates(equivalenceClasses.copy(), dfa)
 
     return equivalenceClasses, dfa
-
-def isStateInClasses(eqvClasses, state):
-    for eqvClassId, eqvClass in eqvClasses.items():
-        if isStateInClass(eqvClass, state):
-            return True
-    return False
 
 #----------------------------------------------
 

@@ -275,6 +275,7 @@ def createTestDfa3():
     return dfa
 
 def createTestDfa4():
+    # из буниной
     # создаем состаяния
     dfa = Dfa(set(['a', 'b']))
     state1 = State(dfa.alphabet) # A
@@ -340,6 +341,75 @@ def createTestDfa4():
 
     return dfa
 
+def createTestDfa5():
+    # http://trpl.narod.ru/Conspectus/trpl_2012_05.htm
+    # создаем состаяния
+    dfa = Dfa(set(['a', 'b']))
+    state1 = State(dfa.alphabet) # A
+    state1.positions = set([1])
+    state1.stateId = '1'
+    state1.isStartState = True
+    state1.isFinalState = True
+
+    state2 = State(dfa.alphabet) # B
+    state2.positions = set([2])
+    state2.stateId = '2'
+
+    state3 = State(dfa.alphabet) # C
+    state3.positions = set([3])
+    state3.stateId = '3'
+    state3.isFinalState = True
+
+    state4 = State(dfa.alphabet) # D
+    state4.positions = set([4])
+    state4.stateId = '4'
+    state4.isFinalState = True
+
+    state5 = State(dfa.alphabet) # E
+    state5.positions = set([5])
+    state5.stateId = '5'
+
+    state1.moves = { # A
+        'a': state2, # B
+        'b': state3 # C
+    }
+
+    state2.moves = { # B
+        'a': state4, # D
+        'b': state5 # E
+    }
+    state2.fromMoves['a'].append(state1)
+    state2.fromMoves['a'].append(state3)
+    state2.fromMoves['a'].append(state4)
+
+    state3.moves = { # C
+        'a': state2, # B
+        'b': state3 # C
+    }
+    state3.fromMoves['b'].append(state1)
+    state3.fromMoves['b'].append(state4)
+    state3.fromMoves['b'].append(state3)
+
+    state4.moves = { # D
+        'a': state2, # B
+        'b': state3 # C
+    }
+    state4.fromMoves['a'].append(state2)
+    state4.fromMoves['a'].append(state5)
+
+    state5.moves = { # E
+        'a': state4, # D
+        'b': state5 # E
+    }
+    state5.fromMoves['b'].append(state2)
+    state5.fromMoves['b'].append(state5)
+
+    # выставляем переходы
+
+    dfa.states = [state1, state2, state3, state4, state5]
+
+    return dfa
+
 ########## TREE TEST ##########
 tree = createTree(regExps[1])
 printFollowPos(tree)
@@ -382,3 +452,11 @@ renderDfa(testDfa4, 'testDfa4')
 minimizedClasses4,  minimizeTestDfa4 = minimizeDfa(testDfa4)
 printMinimizedClasses(minimizedClasses4)
 renderDfa(minimizeTestDfa4, 'minimizeTestDfa4')
+
+#5
+testDfa5 = createTestDfa5()
+printDfaStates(testDfa5)
+renderDfa(testDfa5, 'testDfa5')
+minimizedClasses5,  minimizeTestDfa5 = minimizeDfa(testDfa5)
+printMinimizedClasses(minimizedClasses5)
+renderDfa(minimizeTestDfa5, 'minimizeTestDfa5')
