@@ -38,6 +38,12 @@ class Dfa():
             if not state.isVisited:
                 return False
         return True
+
+    def getStartState(self):
+        for state in self.states:
+            if state.isStartState:
+                return state
+        return None
         
 
 
@@ -219,36 +225,19 @@ def minimizeDfa(dfa):
 
     return equivalenceClasses, dfa
 
-#----------------------------------------------
+def checkMatch(regExp, exp):
+    dfa = createDfa(regExp)
+    eqvClasses, minimizedDfa = minimizeDfa(dfa)
 
-    # # заполняем очередь состояний
-    # for state in nonFinalStates:
-    #     stateQueue.append(state)
-    # for state in finalStates:
-    #     stateQueue.append(state)
-    
-    # while len(stateQueue) != 0:
-    #     state = stateQueue.pop(0)
+    currentState = minimizedDfa.getStartState()
+    if len(exp) == 0:
+        if currentState.isFinalState:
+            return True
+        else:
+            return False
 
-    #     for eqvClassId, eqvClass in equivalenceClasses.items():
-    #         # должно возвращать два set(), например eqvClass = {A,B,C,D}; newClass1 = {A,B,C}, newClass2 = {D}
-    #         # где каждая A,B,C,D есть state
-    #         newClass1, newClass2 = splitClass(eqvClass, state)
-
-    #         if (newClass1 != None and newClass2 != None):
-    #             equivalenceClasses.pop(eqvClassId)
-
-                # newClass1Id = ''.join([state.stateId for state in newClass1])
-                # equivalenceClasses[newClass1Id] = newClass1
-
-                # newClass2Id = ''.join([state.stateId for state in newClass2])
-                # equivalenceClasses[newClass2Id] = newClass2
-
-    #             # добавляем в очередь состояний, состояния из новых классов
-    #             for state in newClass1:
-    #                 stateQueue.append(state)
-
-    #             for state in newClass2:
-    #                 stateQueue.append(state)
-
-    # return equivalenceClasses
+    for word in exp:
+        if word not in currentState.moves:
+            return False
+        currentState = currentState.moves[word]
+    return currentState.isFinalState
