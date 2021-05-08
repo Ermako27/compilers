@@ -200,15 +200,15 @@ def minimizeDfa(dfa):
     # используем далее эту переменную в качестве id для новых классов
     lastClassId = len(equivalenceClasses)
 
-    stateQueue = []
+    classSymbolPairQueue = []
 
     # заполняем очередь состояний
     for symbol in dfa.alphabet:
-        stateQueue.append(tuple([nonFinalStates, symbol])) # пара <C, a> , где С - класс состояний, a - символ по которому делается переход (ребро)
-        stateQueue.append(tuple([finalStates, symbol]))
+        classSymbolPairQueue.append(tuple([nonFinalStates, symbol])) # пара <C, a> , где С - класс состояний, a - символ по которому делается переход (ребро)
+        classSymbolPairQueue.append(tuple([finalStates, symbol]))
 
-    while len(stateQueue) != 0:
-        classSymbolPair = stateQueue.pop(0)
+    while len(classSymbolPairQueue) != 0:
+        classSymbolPair = classSymbolPairQueue.pop(0)
 
         tmpEquivalenceClasses = equivalenceClasses.copy()
         for eqvClassId, eqvClass in equivalenceClasses.items():
@@ -225,8 +225,16 @@ def minimizeDfa(dfa):
                 tmpEquivalenceClasses[str(lastClassId)] = newClass2
 
                 for symbol in dfa.alphabet:
-                    stateQueue.append(tuple([newClass1, symbol]))
-                    stateQueue.append(tuple([newClass2, symbol]))
+                    pair = tuple([eqvClass, symbol])
+                    if isClassSymbolPairInQueue(classSymbolPairQueue, pair):
+                        classSymbolPairQueue = removeClassSymbolPairFromQueue(classSymbolPairQueue, pair)
+                        classSymbolPairQueue.append(tuple([newClass1, symbol]))
+                        classSymbolPairQueue.append(tuple([newClass2, symbol]))
+                    else:
+                        if len(newClass1) <= len(newClass2):
+                            classSymbolPairQueue.append(tuple([newClass1, symbol]))
+                        else:
+                            classSymbolPairQueue.append(tuple([newClass2, symbol])) 
         equivalenceClasses = tmpEquivalenceClasses.copy()
 
     dfa.states = createNewDfaStates(equivalenceClasses.copy(), dfa)
