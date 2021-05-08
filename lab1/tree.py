@@ -134,6 +134,7 @@ def createPolishNotation(regExp):
     return result
 
 def createTree(regExp):
+    regExp = "(" + regExp + ")"
     # <graphviz>
     nodeId = 0 # индекс ноды для graphviz - нужен только для корректной отрисовки дерева
     # </graphviz>
