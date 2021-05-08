@@ -327,7 +327,7 @@ def createTestDfa4():
         'a': state4, # D
         'b': state5 # E
     }
-    state3.fromMoves['b'].append(state3)
+    state3.fromMoves['b'].append(state2)
     state3.fromMoves['b'].append(state5)
 
     state4.moves = { # D
@@ -335,6 +335,7 @@ def createTestDfa4():
         'b': state5 # E
     }
     state4.fromMoves['a'].append(state3)
+    state4.fromMoves['a'].append(state4)
     state4.fromMoves['b'].append(state1)
 
     state5.moves = { # E
@@ -440,13 +441,13 @@ print('check match a | empty: ', checkMatch('a', ''))
 print('check match ab | ab: ', checkMatch('ab', 'ab'))
 
 ########## DFA MINIMIZATION TEST ##########
-# # 1
-# testDfa1 = createTestDfa1()
-# printDfaStates(testDfa1)
-# renderDfa(testDfa1, 'testDfa1')
-# minimizedClasses1,  minimizeTestDfa1 = minimizeDfa(testDfa1)
-# printMinimizedClasses(minimizedClasses1)
-# renderDfa(minimizeTestDfa1, 'minimizeTestDfa1')
+# 1
+testDfa1 = createTestDfa1()
+printDfaStates(testDfa1)
+renderDfa(testDfa1, 'testDfa1')
+minimizedClasses1,  minimizeTestDfa1 = minimizeDfa(testDfa1)
+printMinimizedClasses(minimizedClasses1)
+renderDfa(minimizeTestDfa1, 'minimizeTestDfa1')
 
 # # 2
 # testDfa2 = createTestDfa2()
@@ -456,26 +457,26 @@ print('check match ab | ab: ', checkMatch('ab', 'ab'))
 # printMinimizedClasses(minimizedClasses2)
 # renderDfa(minimizeTestDfa2, 'minimizeTestDfa2')
 
-# # 3
-# testDfa3 = createTestDfa3()
-# printDfaStates(testDfa3)
-# renderDfa(testDfa3, 'testDfa3')
-# minimizedClasses3,  minimizeTestDfa3 = minimizeDfa(testDfa3)
-# printMinimizedClasses(minimizedClasses3)
-# renderDfa(minimizeTestDfa3, 'minimizeTestDfa3')
+# 3
+testDfa3 = createTestDfa3()
+printDfaStates(testDfa3)
+renderDfa(testDfa3, 'testDfa3')
+minimizedClasses3,  minimizeTestDfa3 = minimizeDfa(testDfa3)
+printMinimizedClasses(minimizedClasses3)
+renderDfa(minimizeTestDfa3, 'minimizeTestDfa3')
 
-# # 4
-# testDfa4 = createTestDfa4()
-# printDfaStates(testDfa4)
-# renderDfa(testDfa4, 'testDfa4')
-# minimizedClasses4,  minimizeTestDfa4 = minimizeDfa(testDfa4)
-# printMinimizedClasses(minimizedClasses4)
-# renderDfa(minimizeTestDfa4, 'minimizeTestDfa4')
+# 4
+testDfa4 = createTestDfa4()
+printDfaStates(testDfa4)
+renderDfa(testDfa4, 'testDfa4')
+minimizedClasses4,  minimizeTestDfa4 = minimizeDfa(testDfa4)
+printMinimizedClasses(minimizedClasses4)
+renderDfa(minimizeTestDfa4, 'minimizeTestDfa4')
 
-# #5
-# testDfa5 = createTestDfa5()
-# printDfaStates(testDfa5)
-# renderDfa(testDfa5, 'testDfa5')
-# minimizedClasses5,  minimizeTestDfa5 = minimizeDfa(testDfa5)
-# printMinimizedClasses(minimizedClasses5)
-# renderDfa(minimizeTestDfa5, 'minimizeTestDfa5')
+#5
+testDfa5 = createTestDfa5()
+printDfaStates(testDfa5)
+renderDfa(testDfa5, 'testDfa5')
+minimizedClasses5,  minimizeTestDfa5 = minimizeDfa(testDfa5)
+printMinimizedClasses(minimizedClasses5)
+renderDfa(minimizeTestDfa5, 'minimizeTestDfa5')

@@ -9,6 +9,7 @@ class State():
         self.isStartState = False
         self.isFinalState = False
         self.isVisited = False
+        self.combinedTo = None # если это состояние было соединено в какое-то новое при минимизации, то здесь будет ссылка на новосформированное состояние
 
 class Dfa():
     def __init__(self, alphabet):
@@ -123,6 +124,7 @@ def createNewDfaStates(equivalenceClasses, dfa):
                 newState.positions = newState.positions.union(state.positions)
                 newState.isStartState = newState.isStartState or state.isStartState
                 newState.isFinalState = newState.isFinalState or state.isFinalState
+                state.combinedTo = newState # ссылка на состояние, которое было получено путем соединения этого с еще какими-то состояниями
             newState.stateId = ''.join([str(pos) for pos in newState.positions])
 
             # для каждого состояния из класса эквиваленции
@@ -135,9 +137,15 @@ def createNewDfaStates(equivalenceClasses, dfa):
                         newState.moves[symbol] = newState # значит делаем переход из нового состояния в себя же
                         newState.fromMoves[symbol].append(newState)
                     else:
-                        newState.moves[symbol] = nextState # ставим новому состоянию переход в следующее
-                        # добавляем вместо них в fromMoves новое соединенное состояние
-                        nextState.fromMoves[symbol].append(newState)
+                        # если следующее состояние было скомбинировано в какое-то новое
+                        if nextState.combinedTo != None:
+                            newState.moves[symbol] = nextState.combinedTo # ставим новому состоянию переход в следующее
+                            # добавляем вместо них в fromMoves новое соединенное состояние
+                            nextState.combinedTo.fromMoves[symbol].append(newState)
+                        else:
+                            newState.moves[symbol] = nextState # ставим новому состоянию переход в следующее
+                            # добавляем вместо них в fromMoves новое соединенное состояние
+                            nextState.fromMoves[symbol].append(newState)
 
                 # данный цикл нужен чтобы соединить состояния, которые раньше шли В состояния из класса эквиваленции, с новым состоянием
                 # которое как раз и состоит из состояний из класса эквиваленции
@@ -241,3 +249,37 @@ def checkMatch(regExp, exp):
             return False
         currentState = currentState.moves[word]
     return currentState.isFinalState
+
+
+
+def isEqualClasses(eqvClass1, eqvClass2):
+    if len(eqvClass1) != len(eqvClass2):
+        return False
+    for state in eqvClass1:
+        if not isStateInClass(eqvClass2, state):
+            return False
+    return True
+def isEqualClassSymbolPair(pair1, pair2):
+    if isEqualClasses(pair1[0], pair2[0]) and pair1[1] == pair2[1]:
+        return True
+    return False
+def isClassSymbolPairInQueue(queue, pairToFind):
+    # pairToFind[0] - класс эквиваленции
+    # pairToFind[1] - символ, по которому осуществляется переход
+    for pair in queue:
+        if isEqualClasses(pair[0], pairToFind[0]) and pair[1] == pairToFind[1]:
+            return True
+    return False
+def removeClassSymbolPairFromQueue(queue, pairToRemove):
+    newQueue = []
+    for pair in queue:
+        if not isEqualClassSymbolPair(pair, pairToRemove):
+            newQueue.append(pair)
+    return newQueue
+def printClassStates(eqvClass, name =''):
+    print(name)
+    for state in eqvClass:
+        print(state.positions)
+def printClasses(classes):
+    for i, eqvClass in classes.items():
+        printClassStates(eqvClass)
