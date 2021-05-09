@@ -1,3 +1,5 @@
+from dfa import State, Dfa
+
 def createTestDfa1():
     # https://www.youtube.com/watch?v=0XaGAkY09Wc
     dfa = Dfa(set(['a', 'b']))
