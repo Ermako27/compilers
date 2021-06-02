@@ -14,11 +14,11 @@ def process_grammar(filename, action):
         print("Loaded grammar:\n{}".format(g))
         if action == "form":
             grammar = GrammarConverter.make_chomsky_form(g)
-            # GrammarFile.save_grammar_to_file(grammar, "grammar_without_eps_productions.json")
-            # print("\nWithout eps productions:\n{}".format(grammar))
+            GrammarFile.save_grammar_to_file(grammar, "{0}_chomsky_form.json".format(filename))
+            print("\nWithout eps productions:\n{}".format(grammar))
         elif action == "left-rec":
             grammar = GrammarConverter.delete_left_recursion(g)
-            GrammarFile.save_grammar_to_file(grammar, "grammar_without_recursion.json")
+            GrammarFile.save_grammar_to_file(grammar, "{0}_without_recursion.json".format(filename))
             print("\nWithout left recursion:\n{}".format(grammar))
         else:
             raise Exception("Unknown type of action")

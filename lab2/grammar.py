@@ -36,11 +36,11 @@ class Grammar:
         return new_productions
 
     def delete_directly_left_recursion(self, left):
-        print('\n~~~~~~~~~~~~~~~~~~~~')
-        print('delete_directly_left_recursion')
-        print('~~~~~~~~~~~~~~~~~~~~')
-        print('left: {0}'.format(left))
-        print('self.productions: {0}'.format(self.productions))
+        # print('\n~~~~~~~~~~~~~~~~~~~~')
+        # print('delete_directly_left_recursion')
+        # print('~~~~~~~~~~~~~~~~~~~~')
+        # print('left: {0}'.format(left))
+        # print('self.productions: {0}'.format(self.productions))
         for p in self.productions:
             if p.left == left and p.right[0] == left:
                 break
@@ -53,7 +53,7 @@ class Grammar:
 
         eps_in_productions = False
         for p in self.productions:
-            print('\ncur production {0}'.format(p))
+            # print('\ncur production {0}'.format(p))
             if p.left == left:
                 if p.right[0] == left:
                     new_productions.append(Production(new_left, p.right[1:] + [new_left]))
@@ -62,14 +62,14 @@ class Grammar:
                         eps_in_productions = True
 
                     # new_productions.append(Production(new_left, p.right[1:]))
-                    print('new_productions {0}'.format(new_productions))
+                    # print('new_productions {0}'.format(new_productions))
                 else:
                     new_productions.append(Production(left, p.right[:] + [new_left]))
                     # new_productions.append(Production(left, p.right[:]))
-                    print('new_productions {0}'.format(new_productions))
+                    # print('new_productions {0}'.format(new_productions))
             else:
                 new_productions.append(p)
-                print('new_productions {0}'.format(new_productions))
+                # print('new_productions {0}'.format(new_productions))
 
         self.update_productions(new_productions)
     
