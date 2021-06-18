@@ -108,7 +108,7 @@ class Grammar:
             else:
                 tmp_new_productions.append(production)
         
-        # если был e-продукция из стартового нетерминала, то нужно сделать новый продукцию из нового стартового нетерминала в е
+        # если была e-продукция из стартового нетерминала, то нужно сделать новую продукцию из нового стартового нетерминала в е
         if new_start_symbol != None:
             for production in tmp_new_productions:
                 if production.left == prev_start_symbol and \

@@ -96,14 +96,14 @@ def setFollowPos(node, tree):
 def checkPriority(op1, op2):
     return multiPriority(op1, op2)
 
+(a|b)*abb
 def createPolishNotation(regExp):
     exp = expandWithPlus(regExp)
     exp += '+#'
     result = ''
     stack = []
     for i in range(len(exp)):
-        if isSymbol(exp[i]): # Если токен — символ то добавить его в очередь вывод
-            # то добавить его в очередь вывод
+        if isSymbol(exp[i]): # Если токен — символ то добавить его в очередь на вывод
             result += exp[i]
         elif exp[i] == '(': # Если токен — открывающая скобка
             # то положить его в стек  

@@ -291,3 +291,11 @@ def printClassStates(eqvClass, name =''):
 def printClasses(classes):
     for i, eqvClass in classes.items():
         printClassStates(eqvClass)
+
+
+
+# реализовать лексер intlr
+# синтаксический анализатор
+
+# этапы курсача:
+# 1) лексер
